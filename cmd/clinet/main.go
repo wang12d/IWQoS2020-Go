@@ -14,12 +14,15 @@ func main() {
 	if err != nil {
 		log.Fatalf("generate brokers error: %v", err)
 	}
+	fmt.Println("********************Broker address********************")
 	for _, broker := range brokers {
-		for k, v := range broker {
-			fmt.Printf("%v: \n", k)
-			for _, b := range v {
-				fmt.Printf("\t%v\n", b)
-			}
+		for k := range broker {
+			fmt.Printf("%v\n", k)
 		}
+	}
+	brokerKeys := pkg.GenerateBrokerKeys(numberOfBrokers)
+	fmt.Println("********************Broker Keys********************")
+	for _, bk := range brokerKeys {
+		fmt.Println(bk)
 	}
 }

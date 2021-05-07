@@ -4,15 +4,16 @@ import (
 	"crypto/hmac"
 	"crypto/md5"
 	"crypto/rand"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"math/big"
 )
 
 type BrokerKey struct {
+	Fbpie string
 	Fb1   string
 	Fb2   string
-	Fbpie string
 }
 
 var (
@@ -52,8 +53,14 @@ func GenerateBrokers(numberOfBrokers, numberOfTasks int) ([]map[string][][]byte,
 	return brokersMap, nil
 }
 
-func GenerateBrokerKeys(numberOfBrokers int) {
-
+// GenerateBrokerKeys generates the numberOfBrokers keys, each contains
+// Fb1, Fb2 and Fbpie, which used to construct trapdoor and used as index
+func GenerateBrokerKeys(numberOfBrokers int) []BrokerKey {
+	brokerKeys := make([]BrokerKey, numberOfBrokers)
+	for i := 1; i <= numberOfBrokers; i++ {
+		brokerKeys[i-1] = getKeys(i)
+	}
+	return brokerKeys
 }
 
 func getKeys(id int) BrokerKey {
@@ -61,16 +68,19 @@ func getKeys(id int) BrokerKey {
 	masterKey2 := hmac.New(md5.New, []byte(fmt.Sprintf("b%vmaster2", id))).Sum(nil)
 	secretKey := hmac.New(md5.New, []byte(fmt.Sprintf("b%vsecret", id))).Sum(nil)
 	brokerID := []byte(fmt.Sprintf("broker%vID0000000", id))
-	Fb1 := hmac.New(md5.New, []byte(masterKey1)).Sum(brokerID)
-	Fb2 := hmac.New(md5.New, []byte(masterKey2)).Sum(brokerID)
-	Fbpie := hmac.New(md5.New, []byte(secretKey)).Sum(brokerID)
+	Fbpie := hmac.New(sha256.New, masterKey1)
+	Fbpie.Write(brokerID)
+	Fb1 := hmac.New(sha256.New, masterKey2)
+	Fb1.Write(brokerID)
+	Fb2 := hmac.New(sha256.New, secretKey)
+	Fb2.Write(brokerID)
 	tmp := new(big.Int)
-	tmp.SetBytes(Fb1)
+	tmp.SetBytes(Fb1.Sum(nil))
 	res := BrokerKey{}
 	res.Fb1 = tmp.String()
-	tmp.SetBytes(Fb2)
+	tmp.SetBytes(Fb2.Sum(nil))
 	res.Fb2 = tmp.String()
-	tmp.SetBytes(Fbpie)
+	tmp.SetBytes(Fbpie.Sum(nil))
 	res.Fbpie = tmp.String()
 	return res
 }

@@ -52,7 +52,9 @@ func GenerateBrokers(numberOfBrokers, numberOfTasks int) ([]map[string][][]byte,
 	return brokersMap, nil
 }
 
-func GenerateBrokerKeys(numberOfBrokers int)
+func GenerateBrokerKeys(numberOfBrokers int) {
+
+}
 
 func getKeys(id int) BrokerKey {
 	masterKey1 := hmac.New(md5.New, []byte(fmt.Sprintf("b%vmaster1", id))).Sum(nil)

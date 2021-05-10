@@ -8,21 +8,21 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 )
 
-// TaskUploadSingle upload task index to smart contract one by one
-func TaskUploadSingle(instance *iwqos2020.Iwqos2020, opts *bind.TransactOpts, taskIndex *map[string][]byte) {
+// UploadTaskIndexSingle upload task index to smart contract one by one
+func UploadTaskIndexSingle(instance *iwqos2020.Iwqos2020, opts *bind.TransactOpts, taskIndex *map[string][]byte) {
 	for token, index := range *taskIndex {
 		var tokenArray, indexArray [32]byte
 		copy(tokenArray[:], []byte(token))
 		copy(indexArray[:], index)
 		_, err := instance.Settask(opts, tokenArray, indexArray)
 		if err != nil {
-			log.Fatalf("upload single task failed, %v\n", err)
+			log.Fatalf("upload task index single error: %v\n", err)
 		}
 	}
 }
 
-// TaskUploadBatch upload task index by batch
-func TaskUploadBatch(instance *iwqos2020.Iwqos2020, opts *bind.TransactOpts, taskIndex *map[string][]byte, batchSize int) {
+// UploadTaskIndexBatch upload task index by batch
+func UploadTaskIndexBatch(instance *iwqos2020.Iwqos2020, opts *bind.TransactOpts, taskIndex *map[string][]byte, batchSize int) {
 	batches, remaining := len(*taskIndex)/batchSize, len(*taskIndex)%batchSize
 	tokens := make([][32]byte, batchSize)
 	indexes := make([][32]byte, batchSize)
@@ -35,10 +35,30 @@ func TaskUploadBatch(instance *iwqos2020.Iwqos2020, opts *bind.TransactOpts, tas
 		cnt++
 		if cnt == batchSize {
 			cnt, currentBatch = 0, currentBatch+1
-			instance.SetTaskindex(opts, tokens, indexes, length)
+			_, err := instance.SetTaskindex(opts, tokens, indexes, length)
+			if err != nil {
+				log.Fatalf("upload task index batch error: %v\n", err)
+			}
 		}
 		if currentBatch == batches && remaining == cnt {
-			instance.SetTaskindex(opts, tokens[:remaining], indexes[:remaining], rem)
+			_, err := instance.SetTaskindex(opts, tokens[:remaining], indexes[:remaining], rem)
+			if err != nil {
+				log.Fatalf("upload task index batch error: %v\n", err)
+			}
+		}
+	}
+}
+
+// UploadAuthorizationIndex upload the authorization index to smart contract
+func UploadAuthorizationIndex(instance *iwqos2020.Iwqos2020, opts *bind.TransactOpts, authIndex map[string][]string) {
+	for broker, auth := range authIndex {
+		key := new(big.Int)
+		key.SetString(broker, base)
+		for _, index := range auth {
+			_, err := instance.Setauthorize(opts, key, []byte(index))
+			if err != nil {
+				log.Fatalf("upload authorization index error: %v\n", err)
+			}
 		}
 	}
 }

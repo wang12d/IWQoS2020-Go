@@ -72,3 +72,11 @@ func SetP(instance *iwqos2020.Iwqos2020, opts *bind.TransactOpts) {
 		log.Fatalf("set p error: %v\n", err)
 	}
 }
+
+// GetSearchToken generates the search token on chain
+func GetSearchToken(instance *iwqos2020.Iwqos2020, opts *bind.TransactOpts, token, fbpie *big.Int) {
+	_, err := instance.GetSearchtoke(opts, token, fbpie)
+	if err != nil {
+		log.Fatalf("get search token error: %v\n", err)
+	}
+}

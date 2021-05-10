@@ -62,3 +62,13 @@ func UploadAuthorizationIndex(instance *iwqos2020.Iwqos2020, opts *bind.Transact
 		}
 	}
 }
+
+// SetP upload p to blockchain to search for corresponding task index
+func SetP(instance *iwqos2020.Iwqos2020, opts *bind.TransactOpts) {
+	p := new(big.Int)
+	p.SetString(pStr, base)
+	_, err := instance.SetP(opts, p.Bytes())
+	if err != nil {
+		log.Fatalf("set p error: %v\n", err)
+	}
+}

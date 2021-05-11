@@ -19,11 +19,11 @@ func GetSearchToken(keyWord, Fb2 *big.Int) *big.Int {
 }
 
 // SearchKeyTokenLocally using tbw and fbpie to search the task broker interested
-func SearchKeyTokenLocally(tbw, fbpie *big.Int, authorizationTable map[string]string, taskIndex map[string][]byte) []string {
+func SearchKeyTokenLocally(tbw, fbpie *big.Int, authorizationTable map[string][]string, taskIndex map[string][]byte) []string {
 	interestedTask := make([]string, 0)
 	opterators, p := new(big.Int), new(big.Int)
 	p.SetString(pStr, base)
-	for auth := range authorizationTable {
+	for _, auth := range authorizationTable[fbpie.String()] {
 		authIndex := new(big.Int)
 		authIndex.SetString(auth, base)
 		expt := opterators.Exp(authIndex, tbw, p)

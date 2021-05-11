@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"math/big"
+
 	"nju/cosec/heng/pkg/utils"
 
 	"github.com/ethereum/go-ethereum/crypto"
@@ -16,27 +17,37 @@ func padding(number int) string {
 }
 
 // BuildIndex builds task index according to the description of paper for each broker
-func BuildIndex(brokers *map[string][][]byte, brokerLocalState *[]map[string]int, brokerKeys []BrokerKey) map[string][]byte {
+func BuildIndex(brokers *[]map[string][][]byte, brokerLocalState *[]map[string]int, brokerKeys []BrokerKey) map[string][]byte {
 	numberOfBrokers := len(*brokers)
 	g, p, q := new(big.Int), new(big.Int), new(big.Int)
-	g.SetString(gStr, 10)
-	p.SetString(pStr, 10)
-	q.SetString(qStr, 10)
+	g.SetString(gStr, base)
+	p.SetString(pStr, base)
+	q.SetString(qStr, base)
 	taskIndex := make(map[string][]byte)
 	intOp, tmp := new(big.Int), new(big.Int)
 	for i := 0; i < numberOfBrokers; i++ {
-		for key, val := range *brokers {
+		for key, val := range (*brokers)[i] {
 			keyNumber, Fb1 := new(big.Int), new(big.Int)
-			keyNumber.SetString(key, 10)
-			Fb1.SetString(brokerKeys[i].Fb1, 10)
+			keyNumber.SetString(key, base)
+			Fb1.SetString(brokerKeys[i].Fb1, base)
 			tmp.Mul(keyNumber, Fb1)
 			tmp.Mod(tmp, q)
 			backdoor := intOp.Exp(g, tmp, p)
-			trap := hex.EncodeToString([]byte(backdoor.String()))
+			if backdoor == nil {
+				log.Fatalln("Exp error")
+			}
+			trap := fmt.Sprintf("%x", backdoor)
 			for _, block := range val {
 				trapdoor := trap + padding((*brokerLocalState)[i][key])
 				(*brokerLocalState)[i][key]++
-				label := crypto.Keccak256([]byte(trapdoor))
+				if len(trapdoor) % 2 == 1 {
+					trapdoor = "0" + trapdoor
+				}
+				hexTrapDoor, err := hex.DecodeString(trapdoor)
+				if err != nil {
+					log.Fatalf("Build index encounter hex decode error: %v\n", err)
+				}
+				label := crypto.Keccak256(hexTrapDoor)
 				cipher, err := aes.NewCipher([]byte("1234512345123451"))
 				if err != nil {
 					log.Fatalln("AES create new cipher error")
@@ -44,10 +55,10 @@ func BuildIndex(brokers *map[string][][]byte, brokerLocalState *[]map[string]int
 				C := utils.AESECBEncryption(cipher, block)
 				minLen := min(len(C), len(label))
 				P := make([]byte, minLen)
-				for i := 0; i < minLen; i++ {
-					P[i] = C[i] ^ label[i]
+				for v := 0; v < minLen; v++ {
+					P[v] = C[v] ^ label[v]
 				}
-				taskIndex[hex.EncodeToString(label)] = P
+				taskIndex["0x"+hex.EncodeToString(label)] = P
 			}
 		}
 	}

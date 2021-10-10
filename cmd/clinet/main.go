@@ -3,20 +3,22 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/ethereum/go-ethereum/ethclient"
-	ethutil "github.com/wang12d/Go-Crowdsourcing-DApp/src/crowdsourcing/utils/ethereum"
 	"log"
 	"math/big"
 	"nju/cosec/heng/contracts/iwqos2020"
 	"time"
 
+	"github.com/ethereum/go-ethereum/ethclient"
+	ethutil "github.com/wang12d/Go-Crowdsourcing-DApp/src/crowdsourcing/utils/ethereum"
+
 	"nju/cosec/heng/pkg"
 )
 
 const (
-	URL = "http://localhost:7545"
-	opts = "c9ca7a5d22cc4a2a395eabb44b85e6287a1b100307c9fd874f7aef2c9cb9f81b"
+	URL  = "http://localhost:8545"
+	opts = "97e0ba71d9ba8a41bf31c74b80484d58aa400ef2084a5ae15174d2394ccb3124"
 )
+
 func main() {
 	var err error
 	// Local experiment code
@@ -50,8 +52,7 @@ func main() {
 	pp.SetString(brokerKeys[0].Fb2, 10)
 	fbpie.SetString(brokerKeys[0].Fbpie, 10)
 	tbw1 := pkg.GetSearchToken(token, pp)
-	a := pkg.SearchKeyTokenLocally(tbw1, fbpie, authTable, onChainIndex)
-	fmt.Println(a)
+	pkg.SearchKeyTokenLocally(tbw1, fbpie, authTable, onChainIndex)
 	// On chain experiment code
 
 	// First connect to the ganache experiment network
@@ -70,7 +71,7 @@ func main() {
 	transactor.GasPrice = big.NewInt(200000)
 
 	// Deploy contract
-	contractAdress, _, instance,  err := iwqos2020.DeployIwqos2020(transactor, client)
+	contractAdress, _, instance, err := iwqos2020.DeployIwqos2020(transactor, client)
 	fmt.Println("contract deployed at: ", contractAdress)
 	if err != nil {
 		log.Fatalf("iwqos2020 deployed error: %v\n", err)

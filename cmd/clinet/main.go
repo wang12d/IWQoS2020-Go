@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/ethclient"
-	ethutil "github.com/wang12d/Go-Crowdsourcing-DApp/src/crowdsourcing/utils/ethereum"
+	ethutil "github.com/wang12d/Go-Crowdsourcing-DApp/pkg/crowdsourcing/utils/ethereum"
 
 	"nju/cosec/heng/pkg"
 )
@@ -41,7 +41,7 @@ func main() {
 	start := time.Now()
 	onChainIndex := pkg.BuildIndex(&brokers, &brokerLocalState, brokerKeys)
 	fmt.Println("********************Build on chain index generated.********************")
-	fmt.Println(len(onChainIndex))
+	fmt.Println("on Chain index: ", onChainIndex)
 	fmt.Println(time.Since(start))
 	start = time.Now()
 	authTable := pkg.GetAuthorizationIndex(brokerKeys, brokerKeys)
@@ -78,7 +78,7 @@ func main() {
 	}
 	ethutil.UpdateNonce(client, transactor, optsAddress)
 	start = time.Now()
-	pkg.UploadTaskIndexBatch(client, instance, transactor, optsAddress, &onChainIndex, 500)
+	pkg.UploadTaskIndexBatch(client, instance, transactor, optsAddress, &onChainIndex, 1000)
 	fmt.Println("upload task index batch time cost: ", time.Since(start))
 	start = time.Now()
 	pkg.UploadTaskIndexSingle(client, instance, transactor, optsAddress, &onChainIndex)

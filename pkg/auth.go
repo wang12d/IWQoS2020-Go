@@ -28,7 +28,7 @@ func GetAuthorizationIndex(brokers, authorizationTable []BrokerKey) map[string][
 			tmp := operates.Mul(a, rev)
 			tmp.Mod(tmp, q)
 			tmp.Exp(g, tmp, p)
-			hexTmp := fmt.Sprintf("%#0768x", tmp)
+			hexTmp := fmt.Sprintf("%0768x", tmp)
 			authIndex[j][i] = hexTmp
 		}
 	}

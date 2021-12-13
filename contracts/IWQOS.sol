@@ -3,7 +3,7 @@ pragma solidity >=0.4.22 < 0.8.0;
 
 contract IWQOS{
 
-    uint256 constant broker_number  = 6;
+    uint256 constant broker_number  = 1;
     mapping(uint256 =>  bytes []) public authorization;
     mapping(bytes32 => bytes32) public task_index;
     uint256 public searchtok;

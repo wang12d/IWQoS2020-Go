@@ -1,12 +1,14 @@
 package pkg
 
 import (
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/ethclient"
-	ethutil "github.com/wang12d/Go-Crowdsourcing-DApp/src/crowdsourcing/utils/ethereum"
+	"encoding/hex"
 	"log"
 	"math/big"
 	"nju/cosec/heng/contracts/iwqos2020"
+
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/ethclient"
+	ethutil "github.com/wang12d/Go-Crowdsourcing-DApp/pkg/crowdsourcing/utils/ethereum"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 )
@@ -18,11 +20,11 @@ func UploadTaskIndexSingle(client *ethclient.Client, instance *iwqos2020.Iwqos20
 		var tokenArray, indexArray [32]byte
 		copy(tokenArray[:], []byte(token))
 		copy(indexArray[:], index)
-		ethutil.UpdateNonce(client, opts, optsAddress)
 		_, err := instance.Settask(opts, tokenArray, indexArray)
 		if err != nil {
 			log.Fatalf("upload task index single error: %v\n", err)
 		}
+		ethutil.UpdateNonce(client, opts, optsAddress)
 	}
 }
 
@@ -58,12 +60,18 @@ func UploadTaskIndexBatch(client *ethclient.Client, instance *iwqos2020.Iwqos202
 }
 
 // UploadAuthorizationIndex upload the authorization index to smart contract
-func UploadAuthorizationIndex(instance *iwqos2020.Iwqos2020, opts *bind.TransactOpts, authIndex map[string][]string) {
+func UploadAuthorizationIndex(client *ethclient.Client, instance *iwqos2020.Iwqos2020, opts *bind.TransactOpts,
+	optsAddress common.Address, authIndex map[string][]string) {
 	for broker, auth := range authIndex {
 		key := new(big.Int)
 		key.SetString(broker, base)
 		for _, index := range auth {
-			_, err := instance.Setauthorize(opts, key, []byte(index))
+			indexBytes, err := hex.DecodeString(index)
+			if err != nil {
+				log.Fatalf("decode index error: %v\n", err)
+			}
+			ethutil.UpdateNonce(client, opts, optsAddress)
+			_, err = instance.Setauthorize(opts, key, indexBytes)
 			if err != nil {
 				log.Fatalf("upload authorization index error: %v\n", err)
 			}
@@ -72,9 +80,10 @@ func UploadAuthorizationIndex(instance *iwqos2020.Iwqos2020, opts *bind.Transact
 }
 
 // SetP upload p to blockchain to search for corresponding task index
-func SetP(instance *iwqos2020.Iwqos2020, opts *bind.TransactOpts) {
+func SetP(client *ethclient.Client, instance *iwqos2020.Iwqos2020, opts *bind.TransactOpts, optsAddress common.Address) {
 	p := new(big.Int)
 	p.SetString(pStr, base)
+	ethutil.UpdateNonce(client, opts, optsAddress)
 	_, err := instance.SetP(opts, p.Bytes())
 	if err != nil {
 		log.Fatalf("set p error: %v\n", err)
@@ -82,7 +91,9 @@ func SetP(instance *iwqos2020.Iwqos2020, opts *bind.TransactOpts) {
 }
 
 // SearchTokenOnChain generates the search token on chain
-func SearchTokenOnChain(instance *iwqos2020.Iwqos2020, opts *bind.TransactOpts, token, fbpie *big.Int) {
+func SearchTokenOnChain(client *ethclient.Client, instance *iwqos2020.Iwqos2020, opts *bind.TransactOpts,
+	optsAddress common.Address, token, fbpie *big.Int) {
+	ethutil.UpdateNonce(client, opts, optsAddress)
 	_, err := instance.GetSearchtoke(opts, token, fbpie)
 	if err != nil {
 		log.Fatalf("get search token error: %v\n", err)
